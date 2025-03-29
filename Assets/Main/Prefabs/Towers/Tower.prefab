@@ -223,10 +223,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d727da9626ac42459fa0cb8659209cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: 5
+  range: 3
   damage: 10
   fireRate: 2
-  cost: 1
+  cost: 50
   upgradeCost: 75
   upgradedRange: 12
   upgradedDamage: 15

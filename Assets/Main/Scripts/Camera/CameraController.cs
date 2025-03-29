@@ -15,7 +15,7 @@ public class CameraController : MonoBehaviour
             centerPoint.transform.position = GridManager.Instance.GetGridCenter();
             target = centerPoint.transform;
 
-            transform.position = target.position + offset;
+            transform.position = target.position + offset * GridManager.Instance.GetSize() / 10f;
             transform.LookAt(target.position);
         }
         else

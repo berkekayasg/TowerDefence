@@ -111,4 +111,9 @@ public class GridManager : MonoBehaviour
         LevelData levelData = LevelManager.Instance.CurrentLevelData;
         return GetTile(levelData.endTileCoords.x, levelData.endTileCoords.y);
     }
+
+    public float GetSize()
+    {
+        return (_gridWidth * tileSize > _gridHeight * tileSize) ? _gridWidth * tileSize : _gridHeight * tileSize;
+    }
 }

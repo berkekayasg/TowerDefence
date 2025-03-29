@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 60d4d1b498658ec41bce4863ff48bee5, type: 3}
-  m_Name: WaveData
+  m_Name: WaveData 1
   m_EditorClassIdentifier: 
   initialWaveDelay: 0
   enemySpawnGroups:
@@ -19,6 +19,10 @@ MonoBehaviour:
     timeBetweenSpawns: 1
     delayAfterGroup: 1
   - enemyData: {fileID: 11400000, guid: 818b10dc6b0c73b4ab1d48a5417e69fe, type: 2}
-    spawnCount: 2
-    timeBetweenSpawns: 0.5
+    spawnCount: 5
+    timeBetweenSpawns: 0.2
+    delayAfterGroup: 5
+  - enemyData: {fileID: 11400000, guid: 818b10dc6b0c73b4ab1d48a5417e69fe, type: 2}
+    spawnCount: 5
+    timeBetweenSpawns: 1
     delayAfterGroup: 0

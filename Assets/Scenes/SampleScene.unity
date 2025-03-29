@@ -713,7 +713,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   offset: {x: 0, y: 10, z: -5}
-  smoothSpeed: 0.125
 --- !u!1 &369187424
 GameObject:
   m_ObjectHideFlags: 0
@@ -1921,7 +1920,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waveCompletionBonus: 25
-  timeBetweenWaves: 10
+  timeBetweenWaves: 15
 --- !u!4 &1354863919
 Transform:
   m_ObjectHideFlags: 0
@@ -2820,7 +2819,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelSequence:
-  - {fileID: 11400000, guid: e62664cae42867e4c8c691da96117b34, type: 2}
+  - {fileID: 11400000, guid: 4e6445b0f976cc142b79eff49cdbe666, type: 2}
   - {fileID: 11400000, guid: 4331f67d870a3e348802fe950bdcbb84, type: 2}
   - {fileID: 11400000, guid: e62664cae42867e4c8c691da96117b34, type: 2}
   gameSceneName: SampleScene

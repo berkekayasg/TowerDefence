@@ -20,4 +20,5 @@ MonoBehaviour:
   startingLives: 20
   startingCurrency: 100
   waveDataList:
-  - {fileID: 11400000, guid: 8cb361369da35f84cbbb2ad316e755d8, type: 2}
+  - {fileID: 11400000, guid: 708815be7a70a5b40b6c2a7689685fb8, type: 2}
+  - {fileID: 11400000, guid: 708815be7a70a5b40b6c2a7689685fb8, type: 2}
