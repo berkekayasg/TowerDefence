@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Collections.Generic; // Added for Dictionary
+using System.Linq; // Added for Linq
 
 public class BuildManager : MonoBehaviour
 {
@@ -11,6 +13,9 @@ public class BuildManager : MonoBehaviour
     private Tile selectedTile;
     private Tower selectedTower;
     private GameObject previewTowerInstance;
+
+    // Dictionary to track placed towers and their tiles
+    private Dictionary<Tile, Tower> placedTowers = new Dictionary<Tile, Tower>();
 
     private int ignoreRaycastLayer;
 
@@ -45,10 +50,31 @@ public class BuildManager : MonoBehaviour
         }
     }
 
-    void Start()
+    // --- Helper methods for dictionary ---
+    public bool IsTileOccupied(Tile tile)
     {
-        // towerToBuild = standardTowerPrefab; // Removed: Tower should be selected via UI
+        return placedTowers.ContainsKey(tile);
     }
+
+    public Tower GetTowerOnTile(Tile tile)
+    {
+        placedTowers.TryGetValue(tile, out Tower tower);
+        return tower;
+    }
+
+    public Tile GetTileForTower(Tower tower)
+    {
+        foreach (var kvp in placedTowers)
+        {
+            if (kvp.Value == tower)
+            {
+                return kvp.Key;
+            }
+        }
+        return null;
+    }
+    // --- End Helper methods ---
+
 
     public GameObject GetTowerToBuild()
     {
@@ -77,7 +103,8 @@ public class BuildManager : MonoBehaviour
 
         selectedTile = tile;
 
-        Tower existingTower = FindTowerOnTile(tile);
+        // Use helper method to check for tower
+        Tower existingTower = GetTowerOnTile(tile);
         if (existingTower != null)
         {
             selectedTower = existingTower;
@@ -86,7 +113,7 @@ public class BuildManager : MonoBehaviour
             if (UIManager.Instance != null) UIManager.Instance.ShowUpgradeUI(selectedTower);
             selectedTower.ShowRangeIndicator(true);
         }
-        else if (!tile.IsBuildable())
+        else if (!tile.IsBuildable()) // IsBuildable now checks IsTileOccupied
         {
              Debug.Log("Selected unbuildable tile.");
              HideBuildPreview();
@@ -107,7 +134,7 @@ public class BuildManager : MonoBehaviour
         DeselectTile();
 
         selectedTower = tower;
-        selectedTile = null;
+        selectedTile = null; // Ensure tile is deselected when selecting tower directly
         towerToBuild = null;
 
         Debug.Log($"Selected existing tower directly: {selectedTower.name}");
@@ -121,6 +148,7 @@ public class BuildManager : MonoBehaviour
         {
             return;
         }
+        
         if (!tile.IsBuildable())
         {
             HideBuildPreview();
@@ -161,24 +189,10 @@ public class BuildManager : MonoBehaviour
             Destroy(previewTowerInstance);
             previewTowerInstance = null;
         }
-        if (selectedTower == null) // Only clear selected tile if not selecting a placed tower
+        if (selectedTower == null)
         {
             selectedTile = null;
         }
-    }
-
-    private Tower FindTowerOnTile(Tile tile)
-    {
-        Collider[] colliders = Physics.OverlapSphere(tile.GetBuildPosition(), 0.1f);
-        foreach (var collider in colliders)
-        {
-            Tower tower = collider.GetComponentInParent<Tower>();
-            if (tower != null && tower.gameObject.layer != ignoreRaycastLayer)
-            {
-                return tower;
-            }
-        }
-        return null;
     }
 
     public void DeselectTile()
@@ -223,6 +237,15 @@ public class BuildManager : MonoBehaviour
              return;
         }
 
+        // Check if tile is already occupied using the dictionary
+        if (IsTileOccupied(tile))
+        {
+            Debug.LogWarning($"Build attempt failed: Tile {tile.name} is already occupied.");
+            HideBuildPreview();
+            return;
+        }
+
+
         if (GameManager.Instance.CurrentCurrency < towerComponent.GetCost())
         {
             Debug.Log($"Not enough currency to build {towerToBuild.name}! Need {towerComponent.GetCost()}");
@@ -232,17 +255,18 @@ public class BuildManager : MonoBehaviour
 
         if (GameManager.Instance.SpendCurrency(towerComponent.GetCost()))
         {
+            // Finalize tower placement
             towerComponent.SetPreviewMode(false);
             towerComponent.ShowRangeIndicator(false);
             SetLayerRecursively(previewTowerInstance, LayerMask.NameToLayer("Default"));
 
             Debug.Log($"Tower {previewTowerInstance.name} built on tile {tile.name}!");
 
-            tile.isTower = true; // Mark tile as occupied
+            // Add to dictionary instead of setting Tile.Tower
+            placedTowers.Add(tile, towerComponent);
 
             previewTowerInstance = null; // Clear preview reference
-            // DeselectTile(); // Deselect after successful build
-            selectedTile = null; // Clear selected tile specifically
+            selectedTile = null; // Clear selected tile specifically after build
         }
         else
         {
@@ -276,7 +300,7 @@ public class BuildManager : MonoBehaviour
 
         if (UIManager.Instance != null)
         {
-            UIManager.Instance.ShowUpgradeUI(selectedTower);
+            UIManager.Instance.ShowUpgradeUI(selectedTower); // Refresh UI after upgrade
         }
     }
 
@@ -290,48 +314,25 @@ public class BuildManager : MonoBehaviour
 
         int sellValue = selectedTower.GetCost() / 2; // Sell for half the original cost
 
-        Tile tile = GetTileUnderTower(selectedTower);
+        // Get the tile the tower is on using the helper method
+        Tile tile = GetTileForTower(selectedTower);
+
         if (tile == null)
         {
-            Debug.LogError($"Could not find tile under tower {selectedTower.name}!");
-            return;
+            Debug.LogError($"Could not find the Tile for tower {selectedTower.name} in the registry!");
+            return; // Stop if tile cannot be determined
         }
+
 
         GameManager.Instance.AddCurrency(sellValue);
         Destroy(selectedTower.gameObject);
-        tile.isTower = false; // Mark tile as unoccupied
+        // Remove from dictionary instead of setting Tile.Tower = null
+        placedTowers.Remove(tile);
 
         DeselectTile(); // Deselect after selling
 
-        Debug.Log($"Tower {selectedTower.name} sold for {sellValue} coins.");
         if (UIManager.Instance != null) UIManager.Instance.ShowBuildStatus($"Sold for {sellValue} coins!");
     }
-
-    private Tile GetTileUnderTower(Tower tower)
-    {
-        RaycastHit hit;
-        // Raycast down from slightly above the tower's base
-        if (Physics.Raycast(tower.transform.position + Vector3.up * 0.1f, Vector3.down, out hit, 2f))
-        {
-            Tile tile = hit.collider.GetComponent<Tile>();
-            if (tile != null)
-            {
-                return tile;
-            }
-        }
-        // Fallback: Check nearby tiles if raycast fails (less precise)
-        Collider[] colliders = Physics.OverlapSphere(tower.transform.position, 0.5f);
-        foreach (var collider in colliders)
-        {
-            Tile tile = collider.GetComponent<Tile>();
-            if (tile != null)
-            {
-                return tile;
-            }
-        }
-        return null;
-    }
-
 
     void SetLayerRecursively(GameObject obj, int newLayer)
     {

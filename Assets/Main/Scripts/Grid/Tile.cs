@@ -4,7 +4,7 @@ public class Tile : MonoBehaviour
 {
     public Vector2Int gridPosition;
     public bool isPath = false;
-    public bool isTower = false; // Tracks if a tower is currently placed here
+    public bool isTower => BuildManager.Instance != null && BuildManager.Instance.IsTileOccupied(this);
 
     // A* Pathfinding properties
     public int fCost => gCost + hCost;
@@ -91,7 +91,6 @@ public class Tile : MonoBehaviour
 
      public bool IsBuildable()
      {
-         // Consider adding a check against BuildManager's preview location if needed
          return !isPath && !isTower;
      }
 
