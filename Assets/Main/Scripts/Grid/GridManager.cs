@@ -25,7 +25,9 @@ public class GridManager : MonoBehaviour
         {
             Instance = this;
         }
-
+    }
+    void Start()
+    {
         // Get LevelData from LevelManager in Awake
         if (LevelManager.Instance == null)
         {

@@ -33,6 +33,18 @@ public class BuildManager : MonoBehaviour
         }
     }
 
+    void Update()
+    {
+        // Check for right-click to deselect
+        if (Input.GetMouseButtonDown(1)) // 1 is the right mouse button
+        {
+            DeselectTile();
+            towerToBuild = null; // Also clear the tower to build selection
+            HideBuildPreview();
+            if (UIManager.Instance != null) UIManager.Instance.ShowBuildStatus(""); // Clear build status message
+        }
+    }
+
     void Start()
     {
         // towerToBuild = standardTowerPrefab; // Removed: Tower should be selected via UI
@@ -267,6 +279,59 @@ public class BuildManager : MonoBehaviour
             UIManager.Instance.ShowUpgradeUI(selectedTower);
         }
     }
+
+    public void SellSelectedTower()
+    {
+        if (selectedTower == null)
+        {
+            Debug.LogError("Sell attempt failed: No tower selected.");
+            return;
+        }
+
+        int sellValue = selectedTower.GetCost() / 2; // Sell for half the original cost
+
+        Tile tile = GetTileUnderTower(selectedTower);
+        if (tile == null)
+        {
+            Debug.LogError($"Could not find tile under tower {selectedTower.name}!");
+            return;
+        }
+
+        GameManager.Instance.AddCurrency(sellValue);
+        Destroy(selectedTower.gameObject);
+        tile.isTower = false; // Mark tile as unoccupied
+
+        DeselectTile(); // Deselect after selling
+
+        Debug.Log($"Tower {selectedTower.name} sold for {sellValue} coins.");
+        if (UIManager.Instance != null) UIManager.Instance.ShowBuildStatus($"Sold for {sellValue} coins!");
+    }
+
+    private Tile GetTileUnderTower(Tower tower)
+    {
+        RaycastHit hit;
+        // Raycast down from slightly above the tower's base
+        if (Physics.Raycast(tower.transform.position + Vector3.up * 0.1f, Vector3.down, out hit, 2f))
+        {
+            Tile tile = hit.collider.GetComponent<Tile>();
+            if (tile != null)
+            {
+                return tile;
+            }
+        }
+        // Fallback: Check nearby tiles if raycast fails (less precise)
+        Collider[] colliders = Physics.OverlapSphere(tower.transform.position, 0.5f);
+        foreach (var collider in colliders)
+        {
+            Tile tile = collider.GetComponent<Tile>();
+            if (tile != null)
+            {
+                return tile;
+            }
+        }
+        return null;
+    }
+
 
     void SetLayerRecursively(GameObject obj, int newLayer)
     {

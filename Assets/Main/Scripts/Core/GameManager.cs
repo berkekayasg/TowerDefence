@@ -36,29 +36,29 @@ public class GameManager : MonoBehaviour
         else
         {
             Instance = this;
-
-            if (LevelManager.Instance == null)
-            {
-                Debug.LogError("GameManager (Awake): LevelManager instance not found!");
-                enabled = false;
-                return;
-            }
-            LevelData levelData = LevelManager.Instance.CurrentLevelData;
-            if (levelData == null)
-            {
-                 Debug.LogError("GameManager (Awake): LevelData not assigned in LevelManager!");
-                 enabled = false;
-                 return;
-            }
-
-            CurrentLives = levelData.startingLives;
-            CurrentCurrency = levelData.startingCurrency;
-            _waveDataList = levelData.waveDataList;
         }
     }
 
     void Start()
     {
+        if (LevelManager.Instance == null)
+        {
+            Debug.LogError("GameManager (Awake): LevelManager instance not found!");
+            enabled = false;
+            return;
+        }
+        LevelData levelData = LevelManager.Instance.CurrentLevelData;
+        if (levelData == null)
+        {
+            Debug.LogError("GameManager (Awake): LevelData not assigned in LevelManager!");
+            enabled = false;
+            return;
+        }
+
+        CurrentLives = levelData.startingLives;
+        CurrentCurrency = levelData.startingCurrency;
+        _waveDataList = levelData.waveDataList;
+
         if (UIManager.Instance != null)
         {
             UIManager.Instance.UpdateLives(CurrentLives);

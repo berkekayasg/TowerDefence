@@ -21,6 +21,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject upgradePanel;
     [SerializeField] private Button upgradeButton;
     [SerializeField] private TextMeshProUGUI upgradeCostText;
+    [SerializeField] private Button sellButton; // Added Sell Button
+    [SerializeField] private TextMeshProUGUI sellButtonText; // Added Sell Button Text
     // [SerializeField] private TextMeshProUGUI selectedTowerNameText; // Optional
 
     [Header("Build UI Elements")]
@@ -108,7 +110,18 @@ public class UIManager : MonoBehaviour
             else
             {
                 if (upgradeCostText != null) upgradeCostText.text = "Max\nLevel";
-                if (upgradeButton != null) upgradeButton.interactable = false;
+            if (upgradeButton != null) upgradeButton.interactable = false;
+            }
+
+            // Update Sell Button
+            if (sellButton != null)
+            {
+                sellButton.interactable = true;
+                if (sellButtonText != null)
+                {
+                    int sellValue = selectedTower.GetCost() / 2;
+                    sellButtonText.text = $"Sell\n{sellValue} Coins";
+                }
             }
         }
     }
@@ -206,6 +219,15 @@ public class UIManager : MonoBehaviour
         {
              Debug.LogWarning("Upgrade Button not assigned in UIManager Inspector.");
         }
+
+        if (sellButton != null)
+        {
+            sellButton.onClick.AddListener(OnSellButtonPressed);
+        }
+        else
+        {
+             Debug.LogWarning("Sell Button not assigned in UIManager Inspector.");
+        }
     }
 
     private void OnUpgradeButtonPressed()
@@ -213,6 +235,14 @@ public class UIManager : MonoBehaviour
         if (BuildManager.Instance != null)
         {
             BuildManager.Instance.UpgradeSelectedTower();
+        }
+    }
+
+    private void OnSellButtonPressed()
+    {
+        if (BuildManager.Instance != null)
+        {
+            BuildManager.Instance.SellSelectedTower();
         }
     }
 }
