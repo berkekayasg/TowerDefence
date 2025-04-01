@@ -113,7 +113,6 @@ public class SoundManager : MonoBehaviour
 
     public void PlayEffect(string soundName)
     {
-        Debug.Log(soundName);
         if (string.IsNullOrEmpty(soundName))
         {
             Debug.LogWarning("SoundManager: Attempted to play effect with null or empty name.");

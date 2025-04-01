@@ -161,7 +161,6 @@ public class BuildManager : MonoBehaviour
         selectedTile = null; // Ensure tile is deselected when selecting tower directly
         towerToBuild = null;
 
-        Debug.Log($"Selected existing tower directly: {selectedTower.name}");
         if (UIManager.Instance != null) UIManager.Instance.ShowUpgradeUI(selectedTower);
         selectedTower.ShowRangeIndicator(true);
     }
@@ -291,8 +290,6 @@ public class BuildManager : MonoBehaviour
                 // SetPreviewMode(false) is implicitly handled by not being in preview
                 newTower.ShowRangeIndicator(false); // Ensure indicator is off initially
                 SetLayerRecursively(towerGO, LayerMask.NameToLayer("Default")); // Set layer correctly
-
-                Debug.Log($"Tower {towerToBuild.towerName} built on tile {tile.name}!");
 
                 // Add to dictionary
                 placedTowers.Add(tile, newTower);

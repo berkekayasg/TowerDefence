@@ -22,6 +22,7 @@ public class LevelManager : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
+            Instance.LoadLevelDataForCurrentScene();
             Destroy(gameObject);
             return;
         }
@@ -30,8 +31,7 @@ public class LevelManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
         }
-
-        LoadLevelDataForCurrentScene();
+        Instance.LoadLevelDataForCurrentScene();
     }
 
     private void LoadLevelDataForCurrentScene()
@@ -57,10 +57,6 @@ public class LevelManager : MonoBehaviour
         {
             Debug.LogError($"LevelManager: LevelData at index {currentLevelIndex} in the sequence is null!");
             enabled = false;
-        }
-        else
-        {
-             Debug.Log($"LevelManager: Loaded Level '{currentLevelData.name}' (Index: {currentLevelIndex})");
         }
     }
 

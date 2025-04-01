@@ -470,7 +470,7 @@ MonoBehaviour:
   soundClipStorage: {fileID: 11400000, guid: 96c17652c3af094429a44b4f83241343, type: 2}
   effectsSource: {fileID: 1635220580}
   musicSource: {fileID: 610842217}
-  effectsVolume: 0.178
+  effectsVolume: 0.594
   musicVolume: 0.5
 --- !u!4 &163598269
 Transform:
@@ -3393,8 +3393,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelSequence:
-  - {fileID: 11400000, guid: 4331f67d870a3e348802fe950bdcbb84, type: 2}
   - {fileID: 11400000, guid: e62664cae42867e4c8c691da96117b34, type: 2}
+  - {fileID: 11400000, guid: 4331f67d870a3e348802fe950bdcbb84, type: 2}
   - {fileID: 11400000, guid: 4e6445b0f976cc142b79eff49cdbe666, type: 2}
   gameSceneName: SampleScene
 --- !u!4 &1915705504

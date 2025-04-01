@@ -52,14 +52,10 @@ public class UIManager : MonoBehaviour
 
     void OnDisable()
     {
-        // Check if GameManager still exists before unsubscribing
-        // (prevents errors during scene unload)
-        if (GameManager.Instance != null)
-        {
-            GameManager.OnCurrencyChanged -= HandleCurrencyChanged;
-            GameManager.OnLivesChanged -= HandleLivesChanged;
-            GameManager.OnStateChanged -= HandleGameStateChanged;
-        }
+        GameManager.OnCurrencyChanged -= HandleCurrencyChanged;
+        GameManager.OnLivesChanged -= HandleLivesChanged;
+        GameManager.OnStateChanged -= HandleGameStateChanged;
+        
     }
     // --- End Event Subscription ---
 
@@ -91,7 +87,7 @@ public class UIManager : MonoBehaviour
                 break;
             case GameManager.GameState.Wave:
                 upgradePanel.SetActive(false); // Hide upgrade panel during wave
-                
+
                 // Message showing wave number might be better handled here
                 // but requires access to currentWaveNumber from GameManager.
                 // Keeping the UpdateWave call in GameManager for now.
