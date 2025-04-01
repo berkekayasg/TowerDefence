@@ -19,6 +19,7 @@ public class BuildManager : MonoBehaviour
     private TowerData towerToBuild;
     private Tile selectedTile;
     private Tower selectedTower;
+    public Tower SelectedTower => selectedTower; // Public getter for the selected tower
     private GameObject previewTowerInstance;
 
     // Dictionary to track placed towers and their tiles

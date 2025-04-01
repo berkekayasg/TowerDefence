@@ -29,10 +29,10 @@ public class Enemy : MonoBehaviour
 
     void Start()
     {
-        gridManager = FindFirstObjectByType<GridManager>();
+        gridManager = GridManager.Instance;
         if (gridManager == null)
         {
-            Debug.LogError("GridManager not found in the scene!");
+            Debug.LogError("GridManager instance not found!");
             enabled = false;
             return;
         }

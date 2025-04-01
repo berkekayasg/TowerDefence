@@ -18,7 +18,7 @@ MonoBehaviour:
   startTileCoords: {x: 0, y: 2}
   endTileCoords: {x: 14, y: 0}
   startingLives: 3
-  startingCurrency: 100
+  startingCurrency: 225
   waveDataList:
   - {fileID: 11400000, guid: f3438dc8a2eb7af438c20c087c811931, type: 2}
   - {fileID: 11400000, guid: ba255edc7796baa41a5ea5cc17bee40a, type: 2}

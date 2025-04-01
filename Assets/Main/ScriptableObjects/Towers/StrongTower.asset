@@ -17,11 +17,11 @@ MonoBehaviour:
   towerPrefab: {fileID: 2140613794284267929, guid: 091672063cc6f4746bf71562549a96f1, type: 3}
   projectilePrefab: {fileID: 541229060407335556, guid: 6038a2e290ad4c14fa36d2b9221745c3, type: 3}
   range: 7
-  damage: 10
+  damage: 20
   fireRate: 4
-  cost: 75
+  cost: 50
   projectileSpeed: 10
-  upgradeCost: 50
+  upgradeCost: 30
   upgradeRangeIncrease: 2
   upgradeDamageIncrease: 5
   upgradeFireRateIncrease: 1

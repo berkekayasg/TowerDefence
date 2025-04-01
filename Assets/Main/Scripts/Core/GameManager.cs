@@ -135,7 +135,6 @@ public class GameManager : MonoBehaviour
             StopCoroutine(buildTimerCoroutine);
             buildTimerCoroutine = null;
         }
-        if (UIManager.Instance != null) UIManager.Instance.UpdateTimer(null);
 
 
         switch (newState)
@@ -165,7 +164,6 @@ public class GameManager : MonoBehaviour
                  }
                 break;
             case GameState.None:
-                if (UIManager.Instance != null) UIManager.Instance.UpdateTimer(null);
                 break;
         }
     }

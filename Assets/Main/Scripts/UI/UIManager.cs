@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro; // Added for TextMeshPro
 using System.Collections;
+using System.Collections.Generic; // Added for Dictionary
 
 public class UIManager : MonoBehaviour
 {
@@ -29,6 +30,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject towerButtonPrefab;
     [SerializeField] private TextMeshProUGUI buildStatusText;
 
+    // Dictionary to keep track of build buttons and their associated tower data
+    private Dictionary<Button, TowerData> towerBuildButtons = new Dictionary<Button, TowerData>();
 
     void Awake()
     {
@@ -55,7 +58,7 @@ public class UIManager : MonoBehaviour
         GameManager.OnCurrencyChanged -= HandleCurrencyChanged;
         GameManager.OnLivesChanged -= HandleLivesChanged;
         GameManager.OnStateChanged -= HandleGameStateChanged;
-        
+
     }
     // --- End Event Subscription ---
 
@@ -67,6 +70,7 @@ public class UIManager : MonoBehaviour
         {
             currencyText.text = $"Coins: {newCurrencyValue}";
         }
+        UpdateAllButtonInteractability(newCurrencyValue); // Update buttons when currency changes
     }
 
     private void HandleLivesChanged(int newLivesValue)
@@ -84,23 +88,25 @@ public class UIManager : MonoBehaviour
             case GameManager.GameState.Build:
                 ShowTemporaryMessage("Build Phase");
                 upgradePanel.SetActive(false); // Ensure upgrade panel is hidden in build phase
+                UpdateTimer(null); // Clear timer display
                 break;
             case GameManager.GameState.Wave:
                 upgradePanel.SetActive(false); // Hide upgrade panel during wave
-
-                // Message showing wave number might be better handled here
-                // but requires access to currentWaveNumber from GameManager.
-                // Keeping the UpdateWave call in GameManager for now.
                 break;
             case GameManager.GameState.GameOver:
                 ShowGameOverScreen();
+                UpdateTimer(null); // Clear timer display
                 break;
             case GameManager.GameState.Victory:
                 ShowVictoryScreen();
+                UpdateTimer(null); // Clear timer display
                 break;
             case GameManager.GameState.None:
+                UpdateTimer(null); // Clear timer display
                 break;
         }
+        // Ensure button interactability is updated on state change too
+        UpdateAllButtonInteractability(GameManager.Instance != null ? GameManager.Instance.CurrentCurrency : 0);
     }
     // --- End Event Handlers ---
 
@@ -108,15 +114,15 @@ public class UIManager : MonoBehaviour
     public void UpdateWave(int waveNumber, int totalWaves) // Keep for now
     {
         if (waveText != null)
-         {
-             if (waveNumber > totalWaves)
-             {
-                 waveText.text = $"Wave: {totalWaves}/{totalWaves}";
-             }
-             else
-             {
-                 waveText.text = $"Wave: {waveNumber}/{totalWaves}";
-             }
+        {
+            if (waveNumber > totalWaves)
+            {
+                waveText.text = $"Wave: {totalWaves}/{totalWaves}";
+            }
+            else
+            {
+                waveText.text = $"Wave: {waveNumber}/{totalWaves}";
+            }
         }
     }
 
@@ -143,8 +149,8 @@ public class UIManager : MonoBehaviour
         // Only show upgrade UI during build phase
         if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameManager.GameState.Build)
         {
-             upgradePanel.SetActive(false);
-             return;
+            upgradePanel.SetActive(false);
+            return;
         }
 
 
@@ -164,7 +170,7 @@ public class UIManager : MonoBehaviour
             else
             {
                 if (upgradeCostText != null) upgradeCostText.text = "Max\nLevel";
-            if (upgradeButton != null) upgradeButton.interactable = false;
+                if (upgradeButton != null) upgradeButton.interactable = false;
             }
 
             // Update Sell Button
@@ -178,6 +184,8 @@ public class UIManager : MonoBehaviour
                 }
             }
         }
+        // Update interactability whenever the panel is shown/hidden or tower changes
+        UpdateAllButtonInteractability(GameManager.Instance != null ? GameManager.Instance.CurrentCurrency : 0);
     }
 
     public void ShowTemporaryMessage(string message, float duration = 2f)
@@ -248,6 +256,9 @@ public class UIManager : MonoBehaviour
         ShowUpgradeUI(null); // Ensure upgrade UI is hidden initially
 
         PopulateTowerButtons();
+        // Initial button state update after populating
+        UpdateAllButtonInteractability(GameManager.Instance != null ? GameManager.Instance.CurrentCurrency : 0);
+
 
         if (upgradeButton != null)
         {
@@ -255,7 +266,7 @@ public class UIManager : MonoBehaviour
         }
         else
         {
-             Debug.LogWarning("Upgrade Button not assigned in UIManager Inspector.");
+            Debug.LogWarning("Upgrade Button not assigned in UIManager Inspector.");
         }
 
         if (sellButton != null)
@@ -264,7 +275,7 @@ public class UIManager : MonoBehaviour
         }
         else
         {
-             Debug.LogWarning("Sell Button not assigned in UIManager Inspector.");
+            Debug.LogWarning("Sell Button not assigned in UIManager Inspector.");
         }
     }
 
@@ -304,10 +315,13 @@ public class UIManager : MonoBehaviour
             return;
         }
 
+        // Clear previous buttons and dictionary entries
+        towerBuildButtons.Clear();
         foreach (Transform child in towerButtonContainer)
         {
             Destroy(child.gameObject);
         }
+
 
         // Create a button for each available tower type
         foreach (TowerData towerData in BuildManager.Instance.availableTowers)
@@ -327,7 +341,8 @@ public class UIManager : MonoBehaviour
             {
                 // Use a local variable capture to ensure the correct towerData is passed to the listener
                 TowerData currentTowerData = towerData;
-                button.onClick.AddListener(() => {
+                button.onClick.AddListener(() =>
+                {
                     // Play sound
                     if (SoundManager.Instance != null)
                     {
@@ -344,11 +359,35 @@ public class UIManager : MonoBehaviour
                 {
                     nameText.text = $"{towerData.towerName}\n{towerData.cost} Coins";
                 }
+                // Add button and its data to the dictionary
+                towerBuildButtons.Add(button, currentTowerData);
             }
             else
             {
                 Debug.LogError("Tower Button Prefab is missing Button component!", buttonGO);
             }
+        }
+    }
+
+    // --- Button Interactability Logic ---
+
+    private void UpdateAllButtonInteractability(int currentCurrency)
+    {
+        // Update Tower Build Buttons
+        foreach (KeyValuePair<Button, TowerData> kvp in towerBuildButtons)
+        {
+            if (kvp.Key != null && kvp.Value != null)
+            {
+                kvp.Key.interactable = currentCurrency >= kvp.Value.cost;
+            }
+        }
+
+        Tower currentSelectedTower = BuildManager.Instance.SelectedTower; // Use the new public property
+        if (currentSelectedTower != null && upgradeButton != null)
+        {
+            bool canUpgrade = currentSelectedTower.CanUpgrade();
+            bool canAfford = currentCurrency >= currentSelectedTower.GetUpgradeCost();
+            upgradeButton.interactable = canUpgrade && canAfford;
         }
     }
 }
