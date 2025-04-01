@@ -1,15 +1,22 @@
+using System;
 using UnityEngine;
-using System.Collections.Generic; // Added for Dictionary
-using System.Linq; // Added for Linq
+using System.Collections.Generic;
+using TowerDefence.Core;
 
 public class BuildManager : MonoBehaviour
 {
     public static BuildManager Instance { get; private set; }
 
-    [Header("Setup")]
-    public GameObject standardTowerPrefab; // Assign in Inspector
+    // --- Events ---
+    public static event Action<Tower, Tile> OnTowerPlaced;
+    public static event Action<Tower, Tile> OnTowerSold;
+    public static event Action<Tower> OnTowerUpgraded;
+    // --- End Events ---
 
-    private GameObject towerToBuild;
+    [Header("Setup")]
+    public List<TowerData> availableTowers;
+
+    private TowerData towerToBuild;
     private Tile selectedTile;
     private Tower selectedTower;
     private GameObject previewTowerInstance;
@@ -21,7 +28,6 @@ public class BuildManager : MonoBehaviour
 
     void Awake()
     {
-        // Singleton pattern
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
@@ -33,7 +39,7 @@ public class BuildManager : MonoBehaviour
         ignoreRaycastLayer = LayerMask.NameToLayer("Ignore Raycast");
         if (ignoreRaycastLayer == -1)
         {
-             ignoreRaycastLayer = 2; // Default layer 2
+             ignoreRaycastLayer = 2;
              Debug.LogWarning("'Ignore Raycast' layer not found. Defaulting to layer 2.");
         }
     }
@@ -41,7 +47,7 @@ public class BuildManager : MonoBehaviour
     void Update()
     {
         // Check for right-click to deselect
-        if (Input.GetMouseButtonDown(1)) // 1 is the right mouse button
+        if (Input.GetMouseButtonDown(1))
         {
             DeselectTile();
             towerToBuild = null; // Also clear the tower to build selection
@@ -76,23 +82,31 @@ public class BuildManager : MonoBehaviour
     // --- End Helper methods ---
 
 
-    public GameObject GetTowerToBuild()
+    public TowerData GetTowerToBuild() // Changed return type
     {
         return towerToBuild;
     }
 
     // Method called by UI buttons to select a tower type
-    public void SelectTowerToBuild(GameObject towerPrefab)
+    public void SelectTowerToBuild(TowerData towerData) // Changed parameter type
     {
         DeselectTile(); // Deselect any existing tile/tower
         HideBuildPreview();
 
-        towerToBuild = towerPrefab;
+        towerToBuild = towerData; // Assign TowerData
+        if (UIManager.Instance != null) UIManager.Instance.ShowBuildStatus($"Selected: {towerData.towerName}");
     }
 
-    public void SelectTile(Tile tile)
+     public void SelectTile(Tile tile)
     {
-        if (previewTowerInstance != null && selectedTile == tile)
+        // If a tower type is selected and we click a buildable tile, try to place it
+        if (towerToBuild != null && tile.IsBuildable())
+        {
+            TryPlaceTower(tile);
+            return;
+        }
+        // If we clicked the same tile where a preview is already showing, try placing
+        else if (previewTowerInstance != null && selectedTile == tile)
         {
             TryPlaceTower(tile);
             return;
@@ -113,12 +127,22 @@ public class BuildManager : MonoBehaviour
             if (UIManager.Instance != null) UIManager.Instance.ShowUpgradeUI(selectedTower);
             selectedTower.ShowRangeIndicator(true);
         }
-        else if (!tile.IsBuildable()) // IsBuildable now checks IsTileOccupied
+        else if (!tile.IsBuildable())
         {
              Debug.Log("Selected unbuildable tile.");
+             // Don't show preview if unbuildable
              HideBuildPreview();
+             // Clear tower selection if clicking unbuildable tile
+             towerToBuild = null;
+             if (UIManager.Instance != null) UIManager.Instance.ShowBuildStatus("");
+        }
+        // If the tile is buildable but no tower type is selected, just show preview potential
+        else if (towerToBuild != null)
+        {
+             ShowBuildPreview(tile);
         }
     }
+
 
     public void SelectTower(Tower tower)
     {
@@ -144,11 +168,13 @@ public class BuildManager : MonoBehaviour
 
     public void ShowBuildPreview(Tile tile)
     {
-        if (towerToBuild == null || GameManager.Instance == null || GameManager.Instance.CurrentState != GameManager.GameState.Build)
+        // Check if a tower type is selected and we are in build mode
+        if (towerToBuild == null || towerToBuild.towerPrefab == null || GameManager.Instance == null || GameManager.Instance.CurrentState != GameManager.GameState.Build)
         {
+            HideBuildPreview(); // Ensure preview is hidden if conditions aren't met
             return;
         }
-        
+
         if (!tile.IsBuildable())
         {
             HideBuildPreview();
@@ -160,18 +186,20 @@ public class BuildManager : MonoBehaviour
             return;
         }
 
-        HideBuildPreview();
+        HideBuildPreview(); // Clear previous preview first
 
-        selectedTile = tile;
+        selectedTile = tile; // Remember the tile we're previewing on
 
         Vector3 position = tile.GetBuildPosition();
-        previewTowerInstance = Instantiate(towerToBuild, position, Quaternion.identity);
+        // Instantiate the prefab from the selected TowerData
+        previewTowerInstance = Instantiate(towerToBuild.towerPrefab, position, Quaternion.identity);
         Tower previewTowerScript = previewTowerInstance.GetComponent<Tower>();
 
         if (previewTowerScript != null)
         {
-            previewTowerScript.SetPreviewMode(true);
-            previewTowerScript.ShowRangeIndicator(true);
+            // Pass the TowerData to the preview script
+            previewTowerScript.SetPreviewMode(true, towerToBuild);
+            // ShowRangeIndicator is now handled within SetPreviewMode
             SetLayerRecursively(previewTowerInstance, ignoreRaycastLayer);
         }
         else
@@ -214,14 +242,16 @@ public class BuildManager : MonoBehaviour
 
     private void TryPlaceTower(Tile tile)
     {
-        if (previewTowerInstance == null || selectedTile != tile)
+        // Need a selected tower type to build
+        if (towerToBuild == null || towerToBuild.towerPrefab == null)
         {
-             Debug.LogError("Build attempt failed: No valid preview found on the tile.");
-             HideBuildPreview();
-             return;
+            Debug.LogError("Build attempt failed: No TowerData selected or prefab missing.");
+            HideBuildPreview();
+            return;
         }
 
-        if (GameManager.Instance.CurrentState != GameManager.GameState.Build)
+        // Ensure we are in build state
+        if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameManager.GameState.Build)
         {
              Debug.Log("Can only build during Build Phase!");
              if (UIManager.Instance != null) UIManager.Instance.ShowBuildStatus("Can only build during Build Phase!");
@@ -229,44 +259,61 @@ public class BuildManager : MonoBehaviour
              return;
         }
 
-        Tower towerComponent = previewTowerInstance.GetComponent<Tower>();
-        if (towerComponent == null)
+        // Check if the tile is buildable (includes occupancy check now)
+        if (!tile.IsBuildable())
         {
-             Debug.LogError("Preview instance is missing Tower component!");
-             HideBuildPreview();
-             return;
-        }
-
-        // Check if tile is already occupied using the dictionary
-        if (IsTileOccupied(tile))
-        {
-            Debug.LogWarning($"Build attempt failed: Tile {tile.name} is already occupied.");
+            Debug.LogWarning($"Build attempt failed: Tile {tile.name} is not buildable or already occupied.");
             HideBuildPreview();
             return;
         }
 
-
-        if (GameManager.Instance.CurrentCurrency < towerComponent.GetCost())
+        // Check currency against the selected TowerData's cost
+        if (GameManager.Instance.CurrentCurrency < towerToBuild.cost)
         {
-            Debug.Log($"Not enough currency to build {towerToBuild.name}! Need {towerComponent.GetCost()}");
-            if (UIManager.Instance != null) UIManager.Instance.ShowBuildStatus($"Need {towerComponent.GetCost()} coins!");
+            Debug.Log($"Not enough currency to build {towerToBuild.towerName}! Need {towerToBuild.cost}");
+            if (UIManager.Instance != null) UIManager.Instance.ShowBuildStatus($"Need {towerToBuild.cost} coins!");
+            // Don't hide preview here, let player see they can't afford it
             return;
         }
 
-        if (GameManager.Instance.SpendCurrency(towerComponent.GetCost()))
+        // Try spending currency
+        if (GameManager.Instance.SpendCurrency(towerToBuild.cost))
         {
-            // Finalize tower placement
-            towerComponent.SetPreviewMode(false);
-            towerComponent.ShowRangeIndicator(false);
-            SetLayerRecursively(previewTowerInstance, LayerMask.NameToLayer("Default"));
+            // Instantiate the final tower from TowerData prefab
+            Vector3 position = tile.GetBuildPosition();
+            GameObject towerGO = Instantiate(towerToBuild.towerPrefab, position, Quaternion.identity);
+            Tower newTower = towerGO.GetComponent<Tower>();
 
-            Debug.Log($"Tower {previewTowerInstance.name} built on tile {tile.name}!");
+            if (newTower != null)
+            {
+                // Assign the TowerData to the new tower instance
+                newTower.towerData = towerToBuild;
+                // SetPreviewMode(false) is implicitly handled by not being in preview
+                newTower.ShowRangeIndicator(false); // Ensure indicator is off initially
+                SetLayerRecursively(towerGO, LayerMask.NameToLayer("Default")); // Set layer correctly
 
-            // Add to dictionary instead of setting Tile.Tower
-            placedTowers.Add(tile, towerComponent);
+                Debug.Log($"Tower {towerToBuild.towerName} built on tile {tile.name}!");
 
-            previewTowerInstance = null; // Clear preview reference
-            selectedTile = null; // Clear selected tile specifically after build
+                // Add to dictionary
+                placedTowers.Add(tile, newTower);
+
+                // Raise event instead of direct calls
+                OnTowerPlaced?.Invoke(newTower, tile);
+
+                // Clear selections after successful build
+                HideBuildPreview(); // Destroy preview if it existed
+                selectedTile = null;
+                // Keep towerToBuild selected for potentially building more of the same type
+                // towerToBuild = null; // Uncomment if you want to force re-selection after each build
+            }
+            else
+            {
+                Debug.LogError($"Instantiated tower prefab {towerToBuild.towerName} is missing Tower script!");
+                // Refund currency if instantiation failed critically
+                GameManager.Instance.AddCurrency(towerToBuild.cost);
+                Destroy(towerGO); // Clean up failed instance
+                HideBuildPreview();
+            }
         }
         else
         {
@@ -298,6 +345,10 @@ public class BuildManager : MonoBehaviour
 
         selectedTower.Upgrade();
 
+        // We raise the event here for external systems (like UI refresh) if needed.
+        OnTowerUpgraded?.Invoke(selectedTower);
+
+
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ShowUpgradeUI(selectedTower); // Refresh UI after upgrade
@@ -325,8 +376,12 @@ public class BuildManager : MonoBehaviour
 
 
         GameManager.Instance.AddCurrency(sellValue);
+
+        // Raise event before destroying
+        OnTowerSold?.Invoke(selectedTower, tile);
+
         Destroy(selectedTower.gameObject);
-        // Remove from dictionary instead of setting Tile.Tower = null
+        // Remove from dictionary
         placedTowers.Remove(tile);
 
         DeselectTile(); // Deselect after selling

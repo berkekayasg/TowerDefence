@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02370712573b2ed478515123cdf88f58, type: 3}
+  m_Name: SoundClipStorage
+  m_EditorClassIdentifier: 
+  soundClips:
+  - name: EnemyDeath
+    clip: {fileID: 8300000, guid: 6eba0abf6ed3fa349b88920c35500971, type: 3}
+    volumeScale: 1
+    pitch: 1
+    loop: 0
+  - name: EnemyHit
+    clip: {fileID: 8300000, guid: e0d7fa69ac315874084fcd9865181b39, type: 3}
+    volumeScale: 1
+    pitch: 1
+    loop: 0
+  - name: GameOver
+    clip: {fileID: 8300000, guid: 53647673194fc2e469b0672b2c9ba508, type: 3}
+    volumeScale: 1
+    pitch: 1
+    loop: 0
+  - name: TowerShoot
+    clip: {fileID: 8300000, guid: d4af898d7b6f6484095ae6ba1eeab92e, type: 3}
+    volumeScale: 1
+    pitch: 1
+    loop: 0
+  - name: UIClick
+    clip: {fileID: 8300000, guid: fe02d1959b51d2f45a89d713e7273f85, type: 3}
+    volumeScale: 1
+    pitch: 1
+    loop: 0
+  - name: Victory
+    clip: {fileID: 8300000, guid: c2b23c69b08a4544faf3b9b409456ff3, type: 3}
+    volumeScale: 1
+    pitch: 1
+    loop: 0
+  - name: WaveStart
+    clip: {fileID: 8300000, guid: aa7a7b8def9831b43bc254881492104b, type: 3}
+    volumeScale: 1
+    pitch: 1
+    loop: 0
+  - name: TileHover
+    clip: {fileID: 8300000, guid: 5a2ffaeb70b682f4fb5e316b675ed3dd, type: 3}
+    volumeScale: 0.83
+    pitch: 1
+    loop: 0
+  - name: TowerPlace
+    clip: {fileID: 8300000, guid: 79e3265e9ef39e9429c85adf950ab8dc, type: 3}
+    volumeScale: 2
+    pitch: 1
+    loop: 0
+  - name: TowerSell
+    clip: {fileID: 8300000, guid: de584e93f5d339749873742a577d47a9, type: 3}
+    volumeScale: 2
+    pitch: 1
+    loop: 0
+  - name: TowerUpgrade
+    clip: {fileID: 8300000, guid: 9d31de21d2acf9a4292a247fef2e89cc, type: 3}
+    volumeScale: 2
+    pitch: 1
+    loop: 0

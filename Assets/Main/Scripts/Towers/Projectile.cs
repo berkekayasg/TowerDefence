@@ -1,11 +1,11 @@
 using UnityEngine;
+using TowerDefence.Core;
 
 public class Projectile : MonoBehaviour
 {
     [Header("Attributes")]
     [SerializeField] private float speed = 10f;
     [SerializeField] private float damage = 10f;
-    [SerializeField] private GameObject impactEffect;
 
     private Transform target;
 
@@ -36,8 +36,11 @@ public class Projectile : MonoBehaviour
 
     void HitTarget()
     {
-        GameObject effectInstance = Instantiate(impactEffect, transform.position, transform.rotation);
-        Destroy(effectInstance, 2f);
+        // Play impact VFX using VFXManager
+        if (VFXManager.Instance != null)
+        {
+            VFXManager.Instance.PlayVFX("ProjectileImpact", transform.position, transform.rotation);
+        }
 
         Enemy enemy = target.GetComponent<Enemy>();
         if (enemy != null)

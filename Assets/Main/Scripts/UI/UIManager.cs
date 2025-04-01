@@ -21,12 +21,12 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject upgradePanel;
     [SerializeField] private Button upgradeButton;
     [SerializeField] private TextMeshProUGUI upgradeCostText;
-    [SerializeField] private Button sellButton; // Added Sell Button
-    [SerializeField] private TextMeshProUGUI sellButtonText; // Added Sell Button Text
-    // [SerializeField] private TextMeshProUGUI selectedTowerNameText; // Optional
+    [SerializeField] private Button sellButton;
+    [SerializeField] private TextMeshProUGUI sellButtonText;
 
     [Header("Build UI Elements")]
-    [SerializeField] private Button standardTowerButton;
+    [SerializeField] private Transform towerButtonContainer;
+    [SerializeField] private GameObject towerButtonPrefab;
     [SerializeField] private TextMeshProUGUI buildStatusText;
 
 
@@ -42,23 +42,74 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void UpdateLives(int lives)
+    // --- Event Subscription ---
+    void OnEnable()
     {
-        if (livesText != null)
-        {
-            livesText.text = $"Lives: {lives}";
-        }
+        GameManager.OnCurrencyChanged += HandleCurrencyChanged;
+        GameManager.OnLivesChanged += HandleLivesChanged;
+        GameManager.OnStateChanged += HandleGameStateChanged;
     }
 
-    public void UpdateCurrency(int currency)
+    void OnDisable()
+    {
+        // Check if GameManager still exists before unsubscribing
+        // (prevents errors during scene unload)
+        if (GameManager.Instance != null)
+        {
+            GameManager.OnCurrencyChanged -= HandleCurrencyChanged;
+            GameManager.OnLivesChanged -= HandleLivesChanged;
+            GameManager.OnStateChanged -= HandleGameStateChanged;
+        }
+    }
+    // --- End Event Subscription ---
+
+
+    // --- Event Handlers ---
+    private void HandleCurrencyChanged(int newCurrencyValue)
     {
         if (currencyText != null)
         {
-            currencyText.text = $"Coins: {currency}";
+            currencyText.text = $"Coins: {newCurrencyValue}";
         }
     }
 
-    public void UpdateWave(int waveNumber, int totalWaves)
+    private void HandleLivesChanged(int newLivesValue)
+    {
+        if (livesText != null)
+        {
+            livesText.text = $"Lives: {newLivesValue}";
+        }
+    }
+
+    private void HandleGameStateChanged(GameManager.GameState newState)
+    {
+        switch (newState)
+        {
+            case GameManager.GameState.Build:
+                ShowTemporaryMessage("Build Phase");
+                upgradePanel.SetActive(false); // Ensure upgrade panel is hidden in build phase
+                break;
+            case GameManager.GameState.Wave:
+                upgradePanel.SetActive(false); // Hide upgrade panel during wave
+                
+                // Message showing wave number might be better handled here
+                // but requires access to currentWaveNumber from GameManager.
+                // Keeping the UpdateWave call in GameManager for now.
+                break;
+            case GameManager.GameState.GameOver:
+                ShowGameOverScreen();
+                break;
+            case GameManager.GameState.Victory:
+                ShowVictoryScreen();
+                break;
+            case GameManager.GameState.None:
+                break;
+        }
+    }
+    // --- End Event Handlers ---
+
+
+    public void UpdateWave(int waveNumber, int totalWaves) // Keep for now
     {
         if (waveText != null)
          {
@@ -93,6 +144,14 @@ public class UIManager : MonoBehaviour
     {
         if (upgradePanel == null) return;
 
+        // Only show upgrade UI during build phase
+        if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameManager.GameState.Build)
+        {
+             upgradePanel.SetActive(false);
+             return;
+        }
+
+
         if (selectedTower == null)
         {
             upgradePanel.SetActive(false);
@@ -100,7 +159,6 @@ public class UIManager : MonoBehaviour
         else
         {
             upgradePanel.SetActive(true);
-            // if (selectedTowerNameText != null) selectedTowerNameText.text = selectedTower.name; // Optional
 
             if (selectedTower.CanUpgrade())
             {
@@ -166,16 +224,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void SelectStandardTower()
-    {
-        if (towerSelectionPanel != null && towerSelectionPanel.activeSelf && BuildManager.Instance != null && BuildManager.Instance.standardTowerPrefab != null)
-        {
-            BuildManager.Instance.SelectTowerToBuild(BuildManager.Instance.standardTowerPrefab);
-            ShowBuildStatus($"Selected: {BuildManager.Instance.standardTowerPrefab.name}");
-        }
-    }
-
-    public void ShowBuildStatus(string message) // Added public modifier
+    public void ShowBuildStatus(string message)
     {
         if (buildStatusText != null)
         {
@@ -195,21 +244,14 @@ public class UIManager : MonoBehaviour
 
     void Start()
     {
-        if (GameManager.Instance != null)
-        {
-            UpdateLives(GameManager.Instance.CurrentLives);
-            UpdateCurrency(GameManager.Instance.CurrentCurrency);
-        }
+        // Initial state is set by GameManager triggering events on Start
         if (gameOverScreen != null) gameOverScreen.SetActive(false);
         if (victoryScreen != null) victoryScreen.SetActive(false);
         if (buildStatusText != null) buildStatusText.text = "";
-        UpdateTimer(null);
-        ShowUpgradeUI(null);
+        UpdateTimer(null); // Keep initial timer clear
+        ShowUpgradeUI(null); // Ensure upgrade UI is hidden initially
 
-        if (standardTowerButton != null)
-        {
-            standardTowerButton.onClick.AddListener(SelectStandardTower);
-        }
+        PopulateTowerButtons();
 
         if (upgradeButton != null)
         {
@@ -232,6 +274,12 @@ public class UIManager : MonoBehaviour
 
     private void OnUpgradeButtonPressed()
     {
+        // Play sound
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayEffect("UIClick"); // Using hardcoded name
+        }
+
         if (BuildManager.Instance != null)
         {
             BuildManager.Instance.UpgradeSelectedTower();
@@ -240,9 +288,71 @@ public class UIManager : MonoBehaviour
 
     private void OnSellButtonPressed()
     {
+        // Play sound
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayEffect("UIClick"); // Using hardcoded name
+        }
+
         if (BuildManager.Instance != null)
         {
             BuildManager.Instance.SellSelectedTower();
+        }
+    }
+
+    private void PopulateTowerButtons()
+    {
+        if (towerButtonContainer == null || towerButtonPrefab == null || BuildManager.Instance == null || BuildManager.Instance.availableTowers == null)
+        {
+            Debug.LogError("UIManager cannot populate tower buttons. Check references in Inspector (towerButtonContainer, towerButtonPrefab) and ensure BuildManager has availableTowers list.", this);
+            return;
+        }
+
+        foreach (Transform child in towerButtonContainer)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // Create a button for each available tower type
+        foreach (TowerData towerData in BuildManager.Instance.availableTowers)
+        {
+            if (towerData == null || towerData.towerPrefab == null)
+            {
+                Debug.LogWarning("Skipping null TowerData or TowerData with null prefab in availableTowers list.");
+                continue;
+            }
+
+            GameObject buttonGO = Instantiate(towerButtonPrefab, towerButtonContainer);
+            Button button = buttonGO.GetComponent<Button>();
+            Image iconImage = buttonGO.GetComponentInChildren<Image>(); // Assuming icon is on a child Image
+            TextMeshProUGUI nameText = buttonGO.GetComponentInChildren<TextMeshProUGUI>(); // Assuming text is on a child TMP
+            buttonGO.SetActive(true);
+            if (button != null)
+            {
+                // Use a local variable capture to ensure the correct towerData is passed to the listener
+                TowerData currentTowerData = towerData;
+                button.onClick.AddListener(() => {
+                    // Play sound
+                    if (SoundManager.Instance != null)
+                    {
+                        SoundManager.Instance.PlayEffect("UIClick"); // Using hardcoded name
+                    }
+                    BuildManager.Instance.SelectTowerToBuild(currentTowerData);
+                });
+
+                if (iconImage != null && towerData.towerIcon != null)
+                {
+                    iconImage.sprite = towerData.towerIcon;
+                }
+                if (nameText != null)
+                {
+                    nameText.text = $"{towerData.towerName}\n{towerData.cost} Coins";
+                }
+            }
+            else
+            {
+                Debug.LogError("Tower Button Prefab is missing Button component!", buttonGO);
+            }
         }
     }
 }

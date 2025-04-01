@@ -53,6 +53,11 @@ public class Tile : MonoBehaviour
             {
                 BuildManager.Instance.ShowBuildPreview(this);
             }
+            // Play hover sound
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayEffect("TileHover");
+            }
         }
     }
 

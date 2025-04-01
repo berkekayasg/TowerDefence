@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05711343ab0831f49b1c3a3c04cf43d9, type: 3}
+  m_Name: VFXStorage
+  m_EditorClassIdentifier: 
+  vfxList:
+  - name: TowerShoot
+    vfxPrefab: {fileID: 6721992250116354684, guid: 8b682d421b8d17642983bd5535ce45e6, type: 3}
+    destroyDelay: 0
+  - name: TowerUpgrade
+    vfxPrefab: {fileID: 4398651677186538277, guid: 527a985edccb10041a5d57619a4ccfea, type: 3}
+    destroyDelay: 0
+  - name: EnemyHit
+    vfxPrefab: {fileID: 8810949034680914964, guid: ed0c6c7f6ee9e4949b9a89f90de05af3, type: 3}
+    destroyDelay: 0
+  - name: EnemyDeath
+    vfxPrefab: {fileID: 7294798444126646677, guid: 3f88e52e88f0e6543bf6740e9dccda5a, type: 3}
+    destroyDelay: 0
+  - name: TowerBuild
+    vfxPrefab: {fileID: 8172659470040599541, guid: bfd517c38172c6e44b4b1ea4cd8a5d6f, type: 3}
+    destroyDelay: 0
+  - name: TowerSell
+    vfxPrefab: {fileID: 3687026789962958502, guid: dd3dd4d7c5b76cc4ab8828161f8a1ffe, type: 3}
+    destroyDelay: 0
+  - name: ProjectileImpact
+    vfxPrefab: {fileID: 8907021928047244643, guid: 32924edcb94a8a649881239e76f294b1, type: 3}
+    destroyDelay: 0

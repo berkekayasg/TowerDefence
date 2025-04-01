@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using TowerDefence.Core;
 
 public class Enemy : MonoBehaviour
 {
@@ -66,7 +67,7 @@ public class Enemy : MonoBehaviour
         if (path == null || path.Count == 0 || currentWaypointIndex >= path.Count)
         {
             // Check if actually at the end tile before calling ReachedEnd
-            if (targetTile != null && Vector3.Distance(transform.position, targetTile.transform.position) < 0.1f)
+            if (targetTile != null && Vector3.Distance(transform.position, targetTile.transform.position) < 1.1f)
             {
                  ReachedEnd();
             }
@@ -74,7 +75,7 @@ public class Enemy : MonoBehaviour
         }
 
         Tile currentWaypoint = path[currentWaypointIndex];
-        Vector3 targetPosition = currentWaypoint.transform.position;
+        Vector3 targetPosition = currentWaypoint.transform.position + new Vector3(0, 1f, 0); // Adjust height for the enemy
 
         transform.position = Vector3.MoveTowards(transform.position, targetPosition, currentMoveSpeed * Time.deltaTime);
 
@@ -86,6 +87,18 @@ public class Enemy : MonoBehaviour
 
     public void TakeDamage(float amount)
     {
+        // Play hit sound (optional)
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayEffect("EnemyHit"); // Using hardcoded name
+        }
+
+        // Play hit VFX
+        if (VFXManager.Instance != null)
+        {
+            VFXManager.Instance.PlayVFX("EnemyHit", transform.position);
+        }
+
         currentHealth -= amount;
         if (currentHealth <= 0)
         {
@@ -95,6 +108,18 @@ public class Enemy : MonoBehaviour
 
     private void Die()
     {
+        // Play death sound
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayEffect("EnemyDeath"); // Using hardcoded name
+        }
+
+        // Play death VFX
+        if (VFXManager.Instance != null)
+        {
+            VFXManager.Instance.PlayVFX("EnemyDeath", transform.position);
+        }
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.EnemyDefeated(this);

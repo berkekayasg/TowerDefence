@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -17,9 +18,42 @@ public class GameManager : MonoBehaviour
 
     public int TotalWaves => _waveDataList != null ? _waveDataList.Count : 0;
 
+    // --- Events ---
+    public static event Action<int> OnCurrencyChanged;
+    public static event Action<int> OnLivesChanged;
+    public static event Action<GameState> OnStateChanged;
+
     [Header("Game Status")]
-    public int CurrentLives { get; private set; }
-    public int CurrentCurrency { get; private set; }
+    private int _currentLives;
+    public int CurrentLives
+    {
+        get { return _currentLives; }
+        private set
+        {
+            if (_currentLives != value)
+            {
+                _currentLives = value;
+                OnLivesChanged?.Invoke(_currentLives);
+                 if (_currentLives <= 0 && CurrentState != GameState.GameOver) // Check for game over when lives change
+                 {
+                     SetState(GameState.GameOver);
+                 }
+            }
+        }
+    }
+    private int _currentCurrency;
+    public int CurrentCurrency
+    {
+        get { return _currentCurrency; }
+        private set
+        {
+            if (_currentCurrency != value)
+            {
+                _currentCurrency = value;
+                OnCurrencyChanged?.Invoke(_currentCurrency);
+            }
+        }
+    }
     private int currentWaveNumber = 0;
     private float waveElapsedTime = 0f;
 
@@ -55,15 +89,15 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        // Use property setters to trigger initial events
         CurrentLives = levelData.startingLives;
         CurrentCurrency = levelData.startingCurrency;
         _waveDataList = levelData.waveDataList;
 
+        // Initial UI updates are handled by subscribers listening to events
         if (UIManager.Instance != null)
         {
-            UIManager.Instance.UpdateLives(CurrentLives);
-            UIManager.Instance.UpdateCurrency(CurrentCurrency);
-            UIManager.Instance.UpdateWave(0, TotalWaves);
+             UIManager.Instance.UpdateWave(0, TotalWaves); // Keep this for now
         }
         else
         {
@@ -94,6 +128,7 @@ public class GameManager : MonoBehaviour
         if (CurrentState == newState) return;
 
         CurrentState = newState;
+        OnStateChanged?.Invoke(CurrentState); // Raise the event
 
         if (buildTimerCoroutine != null)
         {
@@ -106,35 +141,23 @@ public class GameManager : MonoBehaviour
         switch (newState)
         {
             case GameState.Build:
-                if (UIManager.Instance != null) UIManager.Instance.ShowTemporaryMessage("Build Phase");
                 buildTimerCoroutine = StartCoroutine(StartNextWaveTimer());
                 break;
             case GameState.Wave:
                 waveElapsedTime = 0f;
-                 if (UIManager.Instance != null)
+                 if (UIManager.Instance != null) // Keep specific data updates for now
                  {
                      UIManager.Instance.UpdateWave(currentWaveNumber + 1, TotalWaves);
-                     UIManager.Instance.ShowTemporaryMessage($"Wave {currentWaveNumber + 1} Starting!");
                  }
                 StartCoroutine(SpawnWave());
                 break;
             case GameState.GameOver:
                 Debug.LogError("GAME OVER!");
-                if (UIManager.Instance != null)
-                {
-                    UIManager.Instance.ShowGameOverScreen();
-                    UIManager.Instance.UpdateTimer(null);
-                }
-                Time.timeScale = 0;
+                Time.timeScale = 0; // Keep game logic here
                 break;
             case GameState.Victory:
                  Debug.Log("VICTORY!");
-                 if (UIManager.Instance != null)
-                 {
-                     UIManager.Instance.ShowVictoryScreen();
-                     UIManager.Instance.UpdateTimer(null);
-                 }
-                 if (LevelManager.Instance != null)
+                 if (LevelManager.Instance != null) // Keep game logic here
                  {
                      LevelManager.Instance.LoadNextLevel();
                  }
@@ -277,17 +300,12 @@ public class GameManager : MonoBehaviour
 
     public void EnemyReachedEnd(Enemy enemy)
     {
-        CurrentLives--;
+        CurrentLives--; // Use property setter, which also handles Game Over check
         if (activeEnemies.Contains(enemy))
         {
             activeEnemies.Remove(enemy);
         }
         Debug.Log($"Enemy reached end. Lives remaining: {CurrentLives}");
-        if (UIManager.Instance != null) UIManager.Instance.UpdateLives(CurrentLives);
-        if (CurrentLives <= 0 && CurrentState != GameState.GameOver)
-        {
-            SetState(GameState.GameOver);
-        }
     }
 
      public void EnemyDefeated(Enemy enemy)
@@ -301,16 +319,14 @@ public class GameManager : MonoBehaviour
 
     public void AddCurrency(int amount)
     {
-        CurrentCurrency += amount;
-        if (UIManager.Instance != null) UIManager.Instance.UpdateCurrency(CurrentCurrency);
+        CurrentCurrency += amount; // Use property setter
     }
 
     public bool SpendCurrency(int amount)
     {
-        if (CurrentCurrency >= amount)
+        if (CurrentCurrency >= amount) // Check against property getter
         {
-            CurrentCurrency -= amount;
-            if (UIManager.Instance != null) UIManager.Instance.UpdateCurrency(CurrentCurrency);
+            CurrentCurrency -= amount; // Use property setter
             return true;
         }
         else
