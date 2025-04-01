@@ -3,15 +3,17 @@ using TowerDefence.Core;
 
 public class Projectile : MonoBehaviour
 {
-    [Header("Attributes")]
-    [SerializeField] private float speed = 10f;
-    [SerializeField] private float damage = 10f;
-
+    // Attributes are now set via Initialize method
+    private float _speed;
+    private float _damage;
     private Transform target;
 
-    public void Seek(Transform _target)
+    // Initialize the projectile with necessary data from the tower
+    public void Initialize(Transform _target, float projectileSpeed, float projectileDamage)
     {
         target = _target;
+        _speed = projectileSpeed;
+        _damage = projectileDamage;
     }
 
     void Update()
@@ -23,7 +25,7 @@ public class Projectile : MonoBehaviour
         }
 
         Vector3 dir = target.position - transform.position;
-        float distanceThisFrame = speed * Time.deltaTime;
+        float distanceThisFrame = _speed * Time.deltaTime; // Use initialized speed
 
         if (dir.magnitude <= distanceThisFrame)
         {
@@ -45,7 +47,7 @@ public class Projectile : MonoBehaviour
         Enemy enemy = target.GetComponent<Enemy>();
         if (enemy != null)
         {
-            enemy.TakeDamage(damage);
+            enemy.TakeDamage(_damage); // Use initialized damage
         }
 
         Destroy(gameObject);

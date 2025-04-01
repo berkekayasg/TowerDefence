@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems; // Required for UI interaction checks
 
 public class Tile : MonoBehaviour
 {
@@ -84,6 +85,13 @@ public class Tile : MonoBehaviour
 
     void OnMouseDown()
     {
+        // Check if the pointer is over a UI element
+        if (EventSystem.current.IsPointerOverGameObject())
+        {
+            // If it is, ignore the click for game world interaction
+            return;
+        }
+
         if (BuildManager.Instance != null)
         {
             BuildManager.Instance.SelectTile(this);

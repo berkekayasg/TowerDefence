@@ -319,7 +319,7 @@ public class UIManager : MonoBehaviour
             }
 
             GameObject buttonGO = Instantiate(towerButtonPrefab, towerButtonContainer);
-            Button button = buttonGO.GetComponent<Button>();
+            Button button = buttonGO.GetComponentInChildren<Button>(true);
             Image iconImage = buttonGO.GetComponentInChildren<Image>(); // Assuming icon is on a child Image
             TextMeshProUGUI nameText = buttonGO.GetComponentInChildren<TextMeshProUGUI>(); // Assuming text is on a child TMP
             buttonGO.SetActive(true);

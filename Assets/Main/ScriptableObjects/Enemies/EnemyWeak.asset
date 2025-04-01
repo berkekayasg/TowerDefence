@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3eea442a3fe22149b917d3b57271349, type: 3}
+  m_Name: EnemyWeak
+  m_EditorClassIdentifier: 
+  health: 200
+  moveSpeed: 2
+  currencyValue: 5
+  enemyPrefab: {fileID: 2755811675550084795, guid: 1067e37d567815b4eb0610ac8da32fc0, type: 3}

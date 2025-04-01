@@ -152,11 +152,9 @@ public class GameManager : MonoBehaviour
                 StartCoroutine(SpawnWave());
                 break;
             case GameState.GameOver:
-                Debug.LogError("GAME OVER!");
                 Time.timeScale = 0; // Keep game logic here
                 break;
             case GameState.Victory:
-                 Debug.Log("VICTORY!");
                  if (LevelManager.Instance != null) // Keep game logic here
                  {
                      LevelManager.Instance.LoadNextLevel();
@@ -305,7 +303,6 @@ public class GameManager : MonoBehaviour
         {
             activeEnemies.Remove(enemy);
         }
-        Debug.Log($"Enemy reached end. Lives remaining: {CurrentLives}");
     }
 
      public void EnemyDefeated(Enemy enemy)

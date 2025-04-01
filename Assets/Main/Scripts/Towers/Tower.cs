@@ -4,13 +4,13 @@ using TowerDefence.Core;
 public class Tower : MonoBehaviour
 {
     [Header("Data")]
-    public TowerData towerData; // Assign this when instantiating
+    [HideInInspector] public TowerData towerData;
 
     private bool isUpgraded = false;
     private bool isPreview = false;
 
     [Header("References")]
-    [SerializeField] private Transform target;
+    private Transform target;
     [SerializeField] private Transform partToRotate;
     public GameObject rangeIndicator; // Assign in Inspector
 
@@ -143,7 +143,11 @@ public class Tower : MonoBehaviour
         Projectile projectile = projectileGO.GetComponent<Projectile>();
         if (projectile != null)
         {
-            projectile.Seek(target);
+            float speed = towerData.projectileSpeed;
+            float damage = currentDamage;
+
+            // Initialize the projectile with target, speed, and damage
+            projectile.Initialize(target, speed, damage);
         }
     }
 
@@ -204,8 +208,6 @@ public class Tower : MonoBehaviour
             {
                 ShowRangeIndicator(true); // Update indicator size
             }
-
-            Debug.Log("Tower Upgraded!");
         }
         else
         {

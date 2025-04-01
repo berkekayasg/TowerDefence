@@ -129,7 +129,6 @@ public class BuildManager : MonoBehaviour
         }
         else if (!tile.IsBuildable())
         {
-             Debug.Log("Selected unbuildable tile.");
              // Don't show preview if unbuildable
              HideBuildPreview();
              // Clear tower selection if clicking unbuildable tile
@@ -252,7 +251,6 @@ public class BuildManager : MonoBehaviour
         // Ensure we are in build state
         if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameManager.GameState.Build)
         {
-             Debug.Log("Can only build during Build Phase!");
              if (UIManager.Instance != null) UIManager.Instance.ShowBuildStatus("Can only build during Build Phase!");
              HideBuildPreview();
              return;
@@ -269,7 +267,6 @@ public class BuildManager : MonoBehaviour
         // Check currency against the selected TowerData's cost
         if (GameManager.Instance.CurrentCurrency < towerToBuild.cost)
         {
-            Debug.Log($"Not enough currency to build {towerToBuild.towerName}! Need {towerToBuild.cost}");
             if (UIManager.Instance != null) UIManager.Instance.ShowBuildStatus($"Need {towerToBuild.cost} coins!");
             // Don't hide preview here, let player see they can't afford it
             return;

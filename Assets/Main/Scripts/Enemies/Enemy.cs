@@ -78,6 +78,7 @@ public class Enemy : MonoBehaviour
         Vector3 targetPosition = currentWaypoint.transform.position + new Vector3(0, 1f, 0); // Adjust height for the enemy
 
         transform.position = Vector3.MoveTowards(transform.position, targetPosition, currentMoveSpeed * Time.deltaTime);
+        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(targetPosition - transform.position + new Vector3(0, transform.position.y - targetPosition.y,0)), Time.deltaTime * 5f);
 
         if (Vector3.Distance(transform.position, targetPosition) < 0.1f)
         {

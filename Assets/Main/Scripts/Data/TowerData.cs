@@ -16,6 +16,7 @@ public class TowerData : ScriptableObject
     public float damage = 10f;
     public float fireRate = 1f; // Shots per second
     public int cost = 100;
+    public float projectileSpeed = 10f; // Speed of the projectile
 
     [Header("Upgrade Stats (Level 1 -> 2)")]
     public int upgradeCost = 50;

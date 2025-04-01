@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38222767ebc8d2b4c9ac8d4c813d34d2, type: 3}
+  m_Name: BasicTower
+  m_EditorClassIdentifier: 
+  towerName: Basic Tower
+  towerIcon: {fileID: 21300000, guid: 7ec40b3d45a042648801946c3746d6fb, type: 3}
+  towerPrefab: {fileID: 4350709132907242169, guid: acfcc75cc47d6a34fa3b5951ff87c7d2, type: 3}
+  projectilePrefab: {fileID: 541229060407335556, guid: 6038a2e290ad4c14fa36d2b9221745c3, type: 3}
+  range: 5
+  damage: 35
+  fireRate: 1
+  cost: 25
+  projectileSpeed: 10
+  upgradeCost: 20
+  upgradeRangeIncrease: 3
+  upgradeDamageIncrease: 20
+  upgradeFireRateIncrease: 0.5
