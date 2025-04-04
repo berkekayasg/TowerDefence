@@ -2,6 +2,8 @@
 
 A Unity C# portfolio project. Place towers, defeat enemies, earn currency, upgrade, and survive waves.
 
+**Video Showcase:** [Watch on YouTube](https://www.youtube.com/watch?v=HF--o58POnA)
+
 **Tech:** Unity Engine, C#, URP, Input System, TextMesh Pro
 
 **Setup & Play:**
