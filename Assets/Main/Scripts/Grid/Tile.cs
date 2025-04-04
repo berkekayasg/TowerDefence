@@ -5,6 +5,7 @@ public class Tile : MonoBehaviour
 {
     public Vector2Int gridPosition;
     public bool isPath = false;
+    public bool isObstacle = false; // Added flag for obstacles
     public bool isTower => BuildManager.Instance != null && BuildManager.Instance.IsTileOccupied(this);
 
     // A* Pathfinding properties
@@ -16,6 +17,7 @@ public class Tile : MonoBehaviour
     [Header("Visuals")]
     [SerializeField] private Color basePathColor = Color.gray;
     [SerializeField] private Color baseTowerColor = Color.green;
+    [SerializeField] private Color baseObstacleColor = Color.black * 0.8f; // Added color for obstacles
     [SerializeField] private Color occupiedColor = Color.red;
     [SerializeField] private Color hoverColor = Color.yellow;
 
@@ -35,7 +37,11 @@ public class Tile : MonoBehaviour
         {
             tileRenderer.material.color = basePathColor;
         }
-        else
+        else if (isObstacle)
+        {
+            tileRenderer.material.color = baseObstacleColor;
+        }
+        else // TowerPlacement tile
         {
             tileRenderer.material.color = isTower ? occupiedColor : baseTowerColor;
         }
@@ -66,14 +72,17 @@ public class Tile : MonoBehaviour
     {
         if (tileRenderer != null)
         {
-            // Restore original color based on tile type
+            // Restore original color based on tile type and state
             if (isPath)
             {
-                tileRenderer.material.color = originalColor; // originalColor is basePathColor for path tiles
+                tileRenderer.material.color = originalColor;
             }
-            else
+            else if (isObstacle)
             {
-                // For non-path tiles, use buildable status to determine color
+                 tileRenderer.material.color = originalColor;
+            }
+            else // TowerPlacement tile
+            {
                 tileRenderer.material.color = IsBuildable() ? originalColor : occupiedColor;
             }
         }
@@ -101,10 +110,10 @@ public class Tile : MonoBehaviour
             Debug.LogError("BuildManager instance not found!");
         }
     }
-
+     // Updated to include obstacle check
      public bool IsBuildable()
      {
-         return !isPath && !isTower;
+         return !isPath && !isTower && !isObstacle;
      }
 
      public Vector3 GetBuildPosition()

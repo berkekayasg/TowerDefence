@@ -17,6 +17,7 @@ public class LevelDesigner : EditorWindow
     private readonly Color startColor = Color.green;
     private readonly Color endColor = Color.red;
     private readonly Color towerPlacementColor = Color.white;
+    private readonly Color obstacleColor = Color.black * 0.8f; // Added color for obstacles
     private readonly Color gridLineColor = Color.black * 0.5f; // Dim grid lines
 
     [MenuItem("Tools/Level Designer")]
@@ -29,7 +30,20 @@ public class LevelDesigner : EditorWindow
     {
         GUILayout.Label("Level Generation Settings", EditorStyles.boldLabel);
 
+        EditorGUI.BeginChangeCheck(); // Start checking for changes
         targetLevelData = (LevelData)EditorGUILayout.ObjectField("Target Level Data", targetLevelData, typeof(LevelData), false);
+        if (EditorGUI.EndChangeCheck()) // Did the targetLevelData field change?
+        {
+            if (targetLevelData != null)
+            {
+                // Update local width/height to match the assigned LevelData
+                gridWidth = targetLevelData.gridWidth;
+                gridHeight = targetLevelData.gridHeight;
+                // Optional: Force repaint if needed, though IntField updates might handle it
+                Repaint();
+            }
+        }
+
         gridWidth = EditorGUILayout.IntField("Grid Width", gridWidth);
         gridHeight = EditorGUILayout.IntField("Grid Height", gridHeight);
         pathPercentage = EditorGUILayout.IntSlider("Path Density (%)", pathPercentage, 10, 50); // Min 5%, Max 80%
@@ -54,12 +68,13 @@ public class LevelDesigner : EditorWindow
         GUILayout.Label("Level Preview", EditorStyles.boldLabel);
 
         // Calculate required scroll view size
-        float previewWidth = gridWidth * TILE_PREVIEW_SIZE + 20; // Add padding
-        float previewHeight = gridHeight * TILE_PREVIEW_SIZE + 20;
+        float previewWidth = gridWidth * TILE_PREVIEW_SIZE - TILE_PREVIEW_SIZE;
+        float previewHeight = gridHeight * TILE_PREVIEW_SIZE;
 
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.Width(previewWidth + 20), GUILayout.Height(previewHeight + 20)); // Add scrollbar padding
         // Reserve space for the preview drawing area
         Rect previewArea = GUILayoutUtility.GetRect(previewWidth, previewHeight);
+        HandlePreviewInput(previewArea); // Handle input before drawing
         DrawPreview(previewArea);
         EditorGUILayout.EndScrollView();
     }
@@ -343,6 +358,7 @@ public class LevelDesigner : EditorWindow
                     case TileType.Path: tileColor = pathColor; break;
                     case TileType.Start: tileColor = startColor; break;
                     case TileType.End: tileColor = endColor; break;
+                    case TileType.Obstacle: tileColor = obstacleColor; break; // Added obstacle case
                     case TileType.TowerPlacement:
                     default: tileColor = towerPlacementColor; break;
                 }
@@ -365,6 +381,67 @@ public class LevelDesigner : EditorWindow
                 if (y == 0) EditorGUI.DrawRect(new Rect(tileRect.x, tileRect.yMax - 1, tileRect.width, 1), gridLineColor); // Bottom edge (inverted y)
 
             }
+        }
+    }
+
+    // Handle mouse clicks within the preview area
+    private void HandlePreviewInput(Rect area)
+    {
+        Event e = Event.current;
+        if (e.type == EventType.MouseDown && e.button == 0 && area.Contains(e.mousePosition)) // Left click inside area
+        {
+            if (targetLevelData == null || targetLevelData.tileLayout == null || targetLevelData.tileLayout.Count != gridWidth * gridHeight)
+            {
+                return; // No data to modify
+            }
+
+            // Convert mouse position to grid coordinates
+            // Account for scroll position and area offset
+            Vector2 localMousePos = e.mousePosition - area.position;
+
+            // Account for inverted Y drawing
+            int x = Mathf.FloorToInt(localMousePos.x / TILE_PREVIEW_SIZE);
+            int y = Mathf.FloorToInt((area.height - localMousePos.y) / TILE_PREVIEW_SIZE); // Inverted Y calculation
+
+            // Clamp coordinates to grid bounds
+            x = Mathf.Clamp(x, 0, gridWidth - 1);
+            y = Mathf.Clamp(y, 0, gridHeight - 1);
+
+            int index = y * gridWidth + x;
+
+            if (index >= 0 && index < targetLevelData.tileLayout.Count)
+            {
+                TileType currentType = targetLevelData.tileLayout[index];
+                TileType nextType = currentType;
+
+                // Determine the next type in the cycle, protecting Start/End
+                switch (currentType)
+                {
+                    case TileType.Path:
+                        nextType = TileType.TowerPlacement;
+                        break;
+                    case TileType.TowerPlacement:
+                        nextType = TileType.Obstacle;
+                        break;
+                    case TileType.Obstacle:
+                        nextType = TileType.Path;
+                        break;
+                    case TileType.Start: // Do not change Start/End tiles
+                    case TileType.End:
+                        nextType = currentType; // No change
+                        break;
+                }
+
+                if (nextType != currentType)
+                {
+                    Undo.RecordObject(targetLevelData, "Modify Tile Type");
+                    targetLevelData.tileLayout[index] = nextType;
+                    EditorUtility.SetDirty(targetLevelData);
+                    Repaint(); // Force redraw to show the change
+                }
+            }
+
+            e.Use(); // Consume the event so it's not processed further
         }
     }
 }

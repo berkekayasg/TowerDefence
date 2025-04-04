@@ -71,6 +71,7 @@ public class GridManager : MonoBehaviour
 
                 TileType type = levelData.GetTileType(x, y);
                 tile.isPath = (type == TileType.Path || type == TileType.Start || type == TileType.End);
+                tile.isObstacle = (type == TileType.Obstacle); // Set the obstacle flag
 
                 grid[x, y] = tile;
             }
