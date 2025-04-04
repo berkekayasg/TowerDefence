@@ -15,8 +15,8 @@ These tools help streamline development and content creation:
 
 - **Level Designer:**
     - **Access:** `Tools > Level Designer` menu item.
-    - **Function:** Allows for quick generation of random level layouts.
-    - **Usage:** Select a `LevelData` ScriptableObject asset in your Project window. Open the Level Designer tool window. Click the "Generate Random Layout" button. This will modify the selected `LevelData` asset, creating a new grid layout with a guaranteed path for enemies.
+    - **Function:** Allows for generation and modification of level layouts stored in `LevelData` assets.
+    - **Usage:** Assign a `LevelData` asset to the tool. The grid dimensions will update automatically. Use the "Generate Random Level" button to create a new layout, or click tiles directly in the preview window to manually cycle between Path, TowerPlacement, and Obstacle types. Changes are saved to the assigned `LevelData`.
 - **Tower Icon Generator:**
     - **Access:** `Tools > Tower Defense > Generate Missing Tower Icons` menu item.
     - **Function:** Automatically creates UI icons for towers based on their 3D models.
